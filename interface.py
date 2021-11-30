@@ -1,13 +1,25 @@
 from tkinter import Tk, Toplevel, Label, CENTER, Entry, Button, Text, Scrollbar, DISABLED, END, NORMAL
+import paho.mqtt.client as paho
+# import time
+import threading
 
-from Client import *
-
+# Variaveis relacionadas ao MQTT
 client = ''
 username = ''
 topic = "geral"  # Topico onde os clientes irão se conectar
 broker = "localhost"
 port = 1883
 
+# Variaveis utilizadas
+flag = 0  # Usada apenas para algumas verificações
+msg = []  # [Destino, Source, Mensagem, isGroup]
+message = ""  # Mensagem que deseja ser enviada
+dst = []  # Destino da mensagem
+grpName = ""  # Nome do grupo
+block = []  # Lista de bloqueados
+groups = []  # Lista de grupos que fui inserido
+grpUsers = []  # Usado para adicionar pessoas nos grupos
+etry = ""
 
 class interface:
 
@@ -178,7 +190,7 @@ class interface:
         self.textCons.config(state=DISABLED)
         self.msg = msg
         self.entryMsg.delete(0, END)
-        snd = threading.Thread(target=on_publish())
+        snd = threading.Thread(target=self.on_publish())
         snd.start()
 
     def printMsg(self, msg):
@@ -221,7 +233,7 @@ class interface:
                 i += 1
             if flag == 0:
                 for i in range(len(msg[3])):
-                    if msg[3][i] == username:
+                    if str(msg[3][i]) == username:
                         print("Adicionado em um novo grupo -> {}".format(str(msg[0])))
                         groups.append(msg[0])
                         # print("Grupo {}- > {}: {}".format(str(msg[0]), str(msg[1]), str(msg[2])))
@@ -232,45 +244,51 @@ class interface:
                     i += 1
 
 
-# Necessario alterar a logica para um melhor funcionamento no front end
-def on_publish():
-    flag = 0
-    message = input("Digite MSG, Group ou Block: \n")
-    # Verifica se a mensagem será enviada para um unico cliente ou para um grupo
-    if message == "msg":
-        dst = input("Para quem deseja mandar a mensagem? \n")
-        message = input("Digite sua mensagem: \n")
-        # Monta a estrutura da mensagem, onde irá conter [Destino, Source, Mensagem, Se é para um grupo ou não]
-        msg = "{}.{}.{}.0".format(dst, username, message)
-        client.publish(topic, msg)  # Publica a mensagem no topico desejado
-
-    elif message == "group":
-        grpName = input("Digite o nome do grupo: \n")
-        for i in range(len(groups)):
-            if grpName == groups[i]:
-                message = input("Digite sua mensagem: \n")
-                # Monta a estrutura da mensagem quando é um grupo -> [Destino, Source, Mensagem, Se é para um grupo ou não]
-                msg = "{}.{}.{}.1".format(grpName, username, message)  # Destino será o nome do grupo
-                flag = 1
-                client.publish(topic, msg)
-            i += 1
-        if flag == 0:
-            # Caso o nome do grupo não exista, é necessario criar o novo grupo
-            groups.append(grpName)
-            print("Para criar o grupo digite 'create' ")
-            entry = input("Digite quem vc deseja add no grupo > \n")
-            while entry != 'create':
-                entry = input("Digite quem vc deseja add no grupo > \n")
-                # Add people in group
-                if entry != 'create':
-                    grpUsers.append(entry)
+    # Necessario alterar a logica para um melhor funcionamento no front end
+    def on_publish(self):
+        flag = 0
+        message = input("Digite MSG, Group ou Block: \n")
+        # Verifica se a mensagem será enviada para um unico cliente ou para um grupo
+        if message == "msg":
+            dst = input("Para quem deseja mandar a mensagem? \n")
             message = input("Digite sua mensagem: \n")
-            msg = "{}.{}.{}.{}".format(grpName, username, message, grpUsers)  # Destino será o nome do grupo
-            client.publish("geral", str(msg))
+            # Monta a estrutura da mensagem, onde irá conter [Destino, Source, Mensagem, Se é para um grupo ou não]
+            aux = "You: {}".format(message)
+            interface.printMsg(self, aux)
+            msg = "{}.{}.{}.0".format(dst, username, message)
+            client.publish(topic, msg)  # Publica a mensagem no topico desejado
 
-    elif message == "block":
-        dst = input("Quem deseja bloquear? \n")
-        block.append(dst)
+        elif message == "group":
+            grpName = input("Digite o nome do grupo: \n")
+            for i in range(len(groups)):
+                if grpName == groups[i]:
+                    message = input("Digite sua mensagem: \n")
+                    # Monta a estrutura da mensagem quando é um grupo -> [Destino, Source, Mensagem, Se é para um grupo ou não]
+                    aux = "Group {} -> You: {} \n\n".format(grpName, message)
+                    interface.printMsg(self, aux)
+                    msg = "{}.{}.{}.1".format(grpName, username, message)  # Destino será o nome do grupo
+                    flag = 1
+                    client.publish(topic, msg)
+                i += 1
+            if flag == 0:
+                # Caso o nome do grupo não exista, é necessario criar o novo grupo
+                groups.append(grpName)
+                print("Para criar o grupo digite 'create' ")
+                entry = input("Digite quem vc deseja add no grupo > \n")
+                while entry != 'create':
+                    entry = input("Digite quem vc deseja add no grupo > \n")
+                    # Add people in group
+                    if entry != 'create':
+                        grpUsers.append(entry)
+                message = input("Digite sua mensagem: \n")
+                aux = "Group {} -> You: {} \n\n".format(grpName, message)
+                interface.printMsg(self, aux)
+                msg = "{}.{}.{}.{} ".format(grpName, username, message, grpUsers)  # Destino será o nome do grupo
+                client.publish("geral", str(msg))
+
+        elif message == "block":
+            dst = input("Quem deseja bloquear? \n")
+            block.append(dst)
 
 
 def on_connect(client, userdata, message, rc):
