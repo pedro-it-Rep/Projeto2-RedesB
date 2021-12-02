@@ -10,7 +10,6 @@ broker = "localhost"
 port = 1883
 
 
-
 class interface:
 
     def __init__(self):
@@ -92,41 +91,40 @@ class interface:
                                pady=5)
 
         self.labelHead.place(relwidth=0.7)
-        self.buttonMsg1234 = Button(self.Window,
-                                 text="Add Group",
-                                 font="Helvetica 8 bold",
-                                 width=20,
-                                 bg="#ABB2B9",
-                                    command=lambda : self.creategroup())
+        self.buttonMsgAddGroup = Button(self.Window,
+                                        text="Add Group",
+                                        font="Helvetica 8 bold",
+                                        width=20,
+                                        bg="#ABB2B9",
+                                        command=lambda: self.creategroup())
 
-        self.buttonMsg1234.place(relx=0.7,
-                              #rely=0.05,
-                              relheight=0.1,
-                              relwidth=0.1)
+        self.buttonMsgAddGroup.place(relx=0.7,
+                                     # rely=0.05,
+                                     relheight=0.1,
+                                     relwidth=0.1)
 
-        self.buttonMsg12345 = Button(self.Window,
-                                    text="Add Contato",
-                                    font="Helvetica 8 bold",
-                                    width=20,
-                                    bg="#ABB2B9",
-                                     command=lambda:self.personContact())
+        self.buttonMsgAddContact = Button(self.Window,
+                                          text="Add Contato",
+                                          font="Helvetica 8 bold",
+                                          width=20,
+                                          bg="#ABB2B9",
+                                          command=lambda: self.personContact())
 
-        self.buttonMsg12345.place(relx=0.8,
-                                 #rely=0.05,
-                                 relheight=0.1,
-                                 relwidth=0.1)
+        self.buttonMsgAddContact.place(relx=0.8,
+                                       # rely=0.05,
+                                       relheight=0.1,
+                                       relwidth=0.1)
 
-        self.buttonMsg12346 = Button(self.Window,
-                                    text="Bloquear",
-                                    font="Helvetica 8 bold",
-                                    width=20,
-                                    bg="#ABB2B9")
+        self.buttonMsgBlockContat = Button(self.Window,
+                                           text="Bloquear",
+                                           font="Helvetica 8 bold",
+                                           width=20,
+                                           bg="#ABB2B9")
 
-        self.buttonMsg12346.place(relx=0.9,
-                                 #rely=0.05,
-                                 relheight=0.1,
-                                 relwidth=0.1)
-
+        self.buttonMsgBlockContat.place(relx=0.9,
+                                        # rely=0.05,
+                                        relheight=0.1,
+                                        relwidth=0.1)
 
         self.line = Label(self.Window,
                           width=450,
@@ -196,17 +194,16 @@ class interface:
 
         self.textCons.config(state=DISABLED)
 
+        # self.buttonMsg1 = Button(self.labelBottom,
+        #                          text="Send",
+        #                          font="Helvetica 10 bold",
+        #                          width=20,
+        #                          bg="#ABB2B9")
 
-        self.buttonMsg1 = Button(self.labelBottom,
-                                text="Send",
-                                font="Helvetica 10 bold",
-                                width=20,
-                                bg="#ABB2B9")
-
-        self.buttonMsg1.place(relx=0.77,
-                             rely=0.008,
-                             relheight=0.06,
-                             relwidth=0.22)
+        # self.buttonMsg1.place(relx=0.77,
+        #                       rely=0.008,
+        #                       relheight=0.06,
+        #                       relwidth=0.22)
 
         # function to basically start the thread for sending messages
 
@@ -217,7 +214,8 @@ class interface:
         label1.pack(side=LEFT)
         entry = Entry(top, bd=5)
         entry.pack(side=LEFT)
-        button = Button(top,text="Confirmar", command=lambda : groupname.set(entry.get()))
+        button = Button(top, text="Confirmar",
+                        command=lambda: groupname.set(entry.get()))
         button.pack(side=LEFT)
         button.wait_variable(groupname)
         print(groupname.get())
@@ -231,7 +229,8 @@ class interface:
         label1.pack(side=LEFT)
         entry = Entry(top, bd=5)
         entry.pack(side=LEFT)
-        button = Button(top, text="Confirmar", command=lambda: personname.set(entry.get()))
+        button = Button(top, text="Confirmar",
+                        command=lambda: personname.set(entry.get()))
         button.pack(side=LEFT)
         button.wait_variable(personname)
         print(personname.get())
@@ -247,11 +246,11 @@ class interface:
                                      bg="#ABB2B9")
 
         self.buttonMsg12347.place(relx=0.7,
-                                  rely= self.buttonPos,
+                                  rely=self.buttonPos,
                                   relheight=0.1,
                                   relwidth=0.3)
 
-    def createPersonContact(self,nameperson):
+    def createPersonContact(self, nameperson):
         self.buttonPos += 0.1
         self.buttonMsg12347 = Button(self.Window,
                                      text=nameperson,
@@ -266,5 +265,3 @@ class interface:
 
 
 i = interface()
-
-

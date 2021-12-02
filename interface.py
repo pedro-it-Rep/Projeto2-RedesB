@@ -1,4 +1,5 @@
-from tkinter import Tk, Toplevel, Label, CENTER, Entry, Button, Text, Scrollbar, DISABLED, END, NORMAL
+from tkinter import Tk, Toplevel, Label, CENTER, Entry, Button, Text, Scrollbar,\
+    DISABLED, END, NORMAL, LEFT, RIGHT, StringVar, BOTTOM
 import paho.mqtt.client as paho
 # import time
 import threading
@@ -21,6 +22,13 @@ groups = []  # Lista de grupos que fui inserido
 grpUsers = []  # Usado para adicionar pessoas nos grupos
 etry = ""
 
+LOGIN_WIDTH = 400
+LOGIN_HEIGHT = 300
+
+CHAT_WIDTH = 800
+CHAT_HEIGHT = 500
+
+
 class interface:
 
     def __init__(self):
@@ -34,8 +42,8 @@ class interface:
         self.login.title("Login")
         self.login.resizable(width=False,
                              height=False)
-        self.login.configure(width=400,
-                             height=300)
+        self.login.configure(width=LOGIN_WIDTH,
+                             height=LOGIN_HEIGHT)
         # create a Label
         self.pls = Label(self.login,
                          text="Por Favor Digite seu Nome",
@@ -76,6 +84,7 @@ class interface:
 
         self.go.place(relx=0.4,
                       rely=0.55)
+        self.buttonPos = 0
         self.Window.mainloop()
 
     def goAhead(self, name):
@@ -102,8 +111,8 @@ class interface:
         self.Window.title("XasUP APP")
         self.Window.resizable(width=False,
                               height=False)
-        self.Window.configure(width=470,
-                              height=550,
+        self.Window.configure(width=800,
+                              height=500,
                               bg="#17202A")
         self.labelHead = Label(self.Window,
                                bg="#17202A",
@@ -112,19 +121,54 @@ class interface:
                                font="Helvetica 13 bold",
                                pady=5)
 
-        self.labelHead.place(relwidth=1)
+        self.labelHead.place(relwidth=0.7)
+        self.buttonMsgAddGroup = Button(self.Window,
+                                        text="Add Group",
+                                        font="Helvetica 8 bold",
+                                        width=20,
+                                        bg="#ABB2B9",
+                                        command=lambda: self.creategroup())
+
+        self.buttonMsgAddGroup.place(relx=0.7,
+                                     # rely=0.05,
+                                     relheight=0.1,
+                                     relwidth=0.1)
+
+        self.buttonMsgAddContact = Button(self.Window,
+                                          text="Add Contato",
+                                          font="Helvetica 8 bold",
+                                          width=20,
+                                          bg="#ABB2B9",
+                                          command=lambda: self.personContact())
+
+        self.buttonMsgAddContact.place(relx=0.8,
+                                       # rely=0.05,
+                                       relheight=0.1,
+                                       relwidth=0.1)
+
+        self.buttonMsgBlockContat = Button(self.Window,
+                                           text="Bloquear",
+                                           font="Helvetica 8 bold",
+                                           width=20,
+                                           bg="#ABB2B9")
+
+        self.buttonMsgBlockContat.place(relx=0.9,
+                                        # rely=0.05,
+                                        relheight=0.1,
+                                        relwidth=0.1)
+
         self.line = Label(self.Window,
                           width=450,
                           bg="#ABB2B9")
 
-        self.line.place(relwidth=1,
+        self.line.place(relwidth=0.7,
                         rely=0.07,
                         relheight=0.012)
 
         global textCons
 
         self.textCons = Text(self.Window,
-                             width=20,
+                             width=10,
                              height=2,
                              bg="#17202A",
                              fg="#EAECEE",
@@ -133,14 +177,14 @@ class interface:
                              pady=5)
 
         self.textCons.place(relheight=0.745,
-                            relwidth=1,
+                            relwidth=0.7,
                             rely=0.08)
 
         self.labelBottom = Label(self.Window,
                                  bg="#ABB2B9",
                                  height=80)
 
-        self.labelBottom.place(relwidth=1,
+        self.labelBottom.place(relwidth=0.7,
                                rely=0.825)
 
         self.entryMsg = Entry(self.labelBottom,
@@ -162,8 +206,7 @@ class interface:
                                 text="Send",
                                 font="Helvetica 10 bold",
                                 width=20,
-                                bg="#ABB2B9",
-                                command=lambda: self.sendButton(self.entryMsg.get()))
+                                bg="#ABB2B9")
 
         self.buttonMsg.place(relx=0.77,
                              rely=0.008,
@@ -174,17 +217,82 @@ class interface:
 
         # create a scroll bar
         scrollbar = Scrollbar(self.textCons)
-
         # place the scroll bar
         # into the gui window
         scrollbar.place(relheight=1,
                         relx=0.974)
-
         scrollbar.config(command=self.textCons.yview)
 
         self.textCons.config(state=DISABLED)
 
+        # self.buttonMsg1 = Button(self.labelBottom,
+        #                          text="Send",
+        #                          font="Helvetica 10 bold",
+        #                          width=20,
+        #                          bg="#ABB2B9")
+
+        # self.buttonMsg1.place(relx=0.77,
+        #                       rely=0.008,
+        #                       relheight=0.06,
+        #                       relwidth=0.22)
+
         # function to basically start the thread for sending messages
+
+    def creategroup(self):
+        groupname = StringVar()
+        top = Toplevel(self.Window)
+        label1 = Label(top, text="Insira nome do grupo")
+        label1.pack(side=LEFT)
+        entry = Entry(top, bd=5)
+        entry.pack(side=LEFT)
+        button = Button(top, text="Confirmar",
+                        command=lambda: groupname.set(entry.get()))
+        button.pack(side=LEFT)
+        button.wait_variable(groupname)
+        print(groupname.get())
+        top.destroy()
+        self.createButtonGroup(groupname.get())
+
+    def personContact(self):
+        personname = StringVar()
+        top = Toplevel(self.Window)
+        label1 = Label(top, text="Insira nome do grupo")
+        label1.pack(side=LEFT)
+        entry = Entry(top, bd=5)
+        entry.pack(side=LEFT)
+        button = Button(top, text="Confirmar",
+                        command=lambda: personname.set(entry.get()))
+        button.pack(side=LEFT)
+        button.wait_variable(personname)
+        print(personname.get())
+        top.destroy()
+        self.createPersonContact(personname.get())
+
+    def createButtonGroup(self, groupname):
+        self.buttonPos += 0.1
+        self.buttonMsg12347 = Button(self.Window,
+                                     text=groupname,
+                                     font="Helvetica 8 bold",
+                                     width=20,
+                                     bg="#ABB2B9")
+
+        self.buttonMsg12347.place(relx=0.7,
+                                  rely=self.buttonPos,
+                                  relheight=0.1,
+                                  relwidth=0.3)
+
+    def createPersonContact(self, nameperson):
+        self.buttonPos += 0.1
+        self.buttonMsg12347 = Button(self.Window,
+                                     text=nameperson,
+                                     font="Helvetica 8 bold",
+                                     width=20,
+                                     bg="#ABB2B9")
+
+        self.buttonMsg12347.place(relx=0.7,
+                                  rely=self.buttonPos,
+                                  relheight=0.1,
+                                  relwidth=0.3)
 
     def sendButton(self, msg):
         self.textCons.config(state=DISABLED)
@@ -227,24 +335,27 @@ class interface:
             for i in range(len(groups)):
                 if msg[0] == groups[i]:
                     # print("{} -> {}: {}".format(str(msg[0]), str(msg[1]), str(msg[2])))
-                    aux = "Grupo {}- > {}: {} \n\n".format(str(msg[0]), str(msg[1]), str(msg[2]))
+                    aux = "Grupo {}- > {}: {} \n\n".format(
+                        str(msg[0]), str(msg[1]), str(msg[2]))
                     interface.printMsg(self, aux)
                     flag = 1
                 i += 1
             if flag == 0:
                 for i in range(len(msg[3])):
                     if str(msg[3][i]) == username:
-                        print("Adicionado em um novo grupo -> {}".format(str(msg[0])))
+                        print(
+                            "Adicionado em um novo grupo -> {}".format(str(msg[0])))
                         groups.append(msg[0])
                         # print("Grupo {}- > {}: {}".format(str(msg[0]), str(msg[1]), str(msg[2])))
-                        aux = "Grupo {}- > {}: {}\n\n".format(str(msg[0]), str(msg[1]), str(msg[2]))
+                        aux = "Grupo {}- > {}: {}\n\n".format(
+                            str(msg[0]), str(msg[1]), str(msg[2]))
                         interface.printMsg(self, aux)
                     else:
                         print("Nao estou no grupo")
                     i += 1
 
-
     # Necessario alterar a logica para um melhor funcionamento no front end
+
     def on_publish(self):
         flag = 0
         message = input("Digite MSG, Group ou Block: \n")
@@ -266,7 +377,8 @@ class interface:
                     # Monta a estrutura da mensagem quando é um grupo -> [Destino, Source, Mensagem, Se é para um grupo ou não]
                     aux = "Group {} -> You: {} \n\n".format(grpName, message)
                     interface.printMsg(self, aux)
-                    msg = "{}.{}.{}.1".format(grpName, username, message)  # Destino será o nome do grupo
+                    # Destino será o nome do grupo
+                    msg = "{}.{}.{}.1".format(grpName, username, message)
                     flag = 1
                     client.publish(topic, msg)
                 i += 1
@@ -283,7 +395,9 @@ class interface:
                 message = input("Digite sua mensagem: \n")
                 aux = "Group {} -> You: {} \n\n".format(grpName, message)
                 interface.printMsg(self, aux)
-                msg = "{}.{}.{}.{} ".format(grpName, username, message, grpUsers)  # Destino será o nome do grupo
+                # Destino será o nome do grupo
+                msg = "{}.{}.{}.{} ".format(
+                    grpName, username, message, grpUsers)
                 client.publish("geral", str(msg))
 
         elif message == "block":
