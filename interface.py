@@ -1,5 +1,5 @@
 from tkinter import Tk, Toplevel, Label, CENTER, Entry, Button, Text, Scrollbar,\
-    DISABLED, END, NORMAL, LEFT, RIGHT, StringVar, BOTTOM
+    DISABLED, END, NORMAL, LEFT, RIGHT, StringVar, BOTTOM, IntVar
 import paho.mqtt.client as paho
 # import time
 import threading
@@ -85,6 +85,7 @@ class interface:
         self.go.place(relx=0.4,
                       rely=0.55)
         self.buttonPos = 0
+        self.listContacts = []
         self.Window.mainloop()
 
     def goAhead(self, name):
@@ -249,14 +250,42 @@ class interface:
                         command=lambda: groupname.set(entry.get()))
         button.pack(side=LEFT)
         button.wait_variable(groupname)
-        print(groupname.get())
         top.destroy()
+        self.addContactGroup()
         self.createButtonGroup(groupname.get())
+
+    def addContactGroup(self):
+        exit = IntVar()
+        top = Toplevel(self.Window)
+        label1 = Label(top, text="Digite um contato para inserir no grupo")
+        label1.pack(side=LEFT)
+        entry = Entry(top, bd=5)
+        entry.pack(side=LEFT)
+        button1 = Button(top, text="Adicionar",
+                        command=lambda: self.checkContact(entry.get()))
+        button1.pack(side=LEFT)
+
+        button2 = Button(top, text="Sair",
+                         command=lambda: exit.set(1))
+        button2.pack(side=LEFT)
+        button2.wait_variable(exit)
+        top.destroy()
+
+    def checkContact(self, contact):
+        print(self.listContacts)
+        if not self.listContacts:
+            print("Criação de um grupo invalido! Crie um contato.")
+        else:
+            for i in self.listContacts:
+                if contact == i:
+                    print("Nome cadastrado")
+                else:
+                    print("Contato não existente")
 
     def personContact(self):
         personname = StringVar()
         top = Toplevel(self.Window)
-        label1 = Label(top, text="Insira nome do grupo")
+        label1 = Label(top, text="Insira nome do contato")#
         label1.pack(side=LEFT)
         entry = Entry(top, bd=5)
         entry.pack(side=LEFT)
@@ -264,7 +293,8 @@ class interface:
                         command=lambda: personname.set(entry.get()))
         button.pack(side=LEFT)
         button.wait_variable(personname)
-        print(personname.get())
+        #print(personname.get())
+        self.listContacts.append(personname.get())
         top.destroy()
         self.createPersonContact(personname.get())
 
