@@ -2,7 +2,7 @@ import time
 from tkinter import Tk, Toplevel, Label, CENTER, Entry, Button, Text, Scrollbar, \
     DISABLED, END, NORMAL, LEFT, RIGHT, StringVar, BOTTOM, IntVar
 import paho.mqtt.client as paho
-# import time
+from pykafka import KafkaClient
 import threading
 
 # Variaveis relacionadas ao MQTT
@@ -11,6 +11,11 @@ username = ''
 topic = "geral"  # Topico onde os clientes irão se conectar
 broker = "localhost"
 port = 1883
+
+# Variaveis relacionadas ao Kafka
+kafka_client = ''
+kafka_topic = ''
+kafka_producer = ''
 
 # Variaveis utilizadas
 flag = 0  # Usada apenas para algumas verificações
@@ -104,6 +109,10 @@ class interface:
         client.connect(broker, port)
         client.loop_start()
         client.subscribe(topic)
+
+        kafka_client = KafkaClient(hosts="localhost:9092")
+        kafka_topic = kafka_client.topics[topic]
+        kafka_producer = kafka_topic.get_sync_producer()
 
         self.layout(name)
 
@@ -375,6 +384,7 @@ class interface:
         msg = message.payload.decode("utf-8").split(
             ".")  # Necessario converter para utf-8, caso contrario a mensagem estará em binário
         # Verifica se é uma mensagem para um grupo ou não
+        kafka_producer.produce(msg.encode('ascii'))
         if str(msg[1]) != username:
             if str(msg[3]) == '0':
                 # Verifica se a mensagem é diretamente para meu username
