@@ -1,5 +1,6 @@
+import time
 from tkinter import Tk, Toplevel, Label, CENTER, Entry, Button, Text, Scrollbar, \
-    DISABLED, END, NORMAL, LEFT, RIGHT, StringVar, BOTTOM
+    DISABLED, END, NORMAL, LEFT, RIGHT, StringVar, BOTTOM, IntVar
 import paho.mqtt.client as paho
 # import time
 import threading
@@ -18,9 +19,9 @@ message = ""  # Mensagem que deseja ser enviada
 block = []  # Lista de bloqueados
 grpName = ""  # Nome do grupo
 groups = []  # Lista de grupos que fui inserido
-grpUsers = []  # Usado para adicionar pessoas nos grupos
 etry = ""
 msgToSend = 0
+newMessages = []
 
 LOGIN_WIDTH = 400
 LOGIN_HEIGHT = 300
@@ -87,6 +88,7 @@ class interface:
         self.go.place(relx=0.4,
                       rely=0.55)
         self.buttonPos = 0
+        self.listContacts = [] # Usado para adicionar pessoas nos grupos
         self.Window.mainloop()
 
     def goAhead(self, name):
@@ -175,7 +177,7 @@ class interface:
                              height=2,
                              bg="#17202A",
                              fg="#EAECEE",
-                             font="Helvetica 14",
+                             font="Helvetica 10",
                              padx=5,
                              pady=5)
 
@@ -242,12 +244,41 @@ class interface:
         button.wait_variable(groupname)
         print(groupname.get())
         top.destroy()
+        self.addContactGroup()
         self.createButtonGroup(groupname.get())
+
+    def addContactGroup(self):
+        exit = IntVar()
+        top = Toplevel(self.Window)
+        label1 = Label(top, text="Digite um contato para inserir no grupo")
+        label1.pack(side=LEFT)
+        entry = Entry(top, bd=5)
+        entry.pack(side=LEFT)
+        button1 = Button(top, text="Adicionar",
+                         command=lambda: self.checkContact(entry.get()))
+        button1.pack(side=LEFT)
+
+        button2 = Button(top, text="Sair",
+                         command=lambda: exit.set(1))
+        button2.pack(side=LEFT)
+        button2.wait_variable(exit)
+        top.destroy()
+
+    def checkContact(self, contact):
+        print(self.listContacts)
+        if not self.listContacts:
+            print("Criação de um grupo invalido! Crie um contato.")
+        else:
+            for i in self.listContacts:
+                if contact == i:
+                    print("Nome cadastrado")
+                else:
+                    print("Contato não existente")
 
     def personContact(self):
         personname = StringVar()
         top = Toplevel(self.Window)
-        label1 = Label(top, text="Insira nome do grupo")
+        label1 = Label(top, text="Insira nome do contato")
         label1.pack(side=LEFT)
         entry = Entry(top, bd=5)
         entry.pack(side=LEFT)
@@ -255,7 +286,7 @@ class interface:
                         command=lambda: personname.set(entry.get()))
         button.pack(side=LEFT)
         button.wait_variable(personname)
-        print(personname.get())
+        self.listContacts.append(personname.get())
         top.destroy()
         self.createPersonContact(personname.get())
 
@@ -288,10 +319,24 @@ class interface:
                                   relwidth=0.3)
 
     def getContact(self, nameperson, isGrp):
+        flag = 0
         self.textCons.config(state=NORMAL)
         self.textCons.delete(1.0, END)
         self.textCons.config(state=DISABLED)
         self.textCons.see(END)
+
+        if newMessages:
+            x = 0
+            for i in range(len(newMessages)):
+                if nameperson == newMessages[i][0]:
+                    auxMsg = "{}: {}\n".format(newMessages[i][0], newMessages[i][1])
+                    self.printMsg(auxMsg)
+                    x += 1
+
+            self.buttonMsg12347.configure(text=f'{nameperson}')
+            for i in range(x):
+                newMessages.pop(0)
+
         if isGrp == 0:
             self.dst = nameperson
             self.msgToSend = 0
@@ -324,6 +369,7 @@ class interface:
 
     def on_message(self, client, userdata, message):
         flag = 0
+        aux = 0
         # Verifica se é uma mensagem para um grupo ou não
         # Divide a mensagem para tratar ela de forma correta
         msg = message.payload.decode("utf-8").split(
@@ -339,33 +385,56 @@ class interface:
                         if block[i] == str(msg[1]):
                             print("Quem enviou esta na lista de bloqueados")
                             flag = 1
+                            break
                         i += 1
                     if flag == 0:
-                        aux = "{}: {}\n".format(str(msg[1]), str(msg[2]))
-                        interface.printMsg(self, aux)
+                        if self.dst != str(msg[1]):  # Se mensagem != destino selecionado -> Envia apenas recebida
+                            for i in range(len(newMessages)):
+                                if str(msg[1]) == newMessages[i][0]:
+                                    aux += 1
+                            newMessages.append([str(msg[1]), str(msg[2]), aux])
+                            self.buttonMsg12347.configure(text=f'{str(msg[1])} \t {aux+1}')
+                            # Usar um vetor com as mensagens recebidas -> Manda um lida e tira as mensagens do vetor
+                        else:
+                            aux = "{}: {}\n".format(str(msg[1]), str(msg[2]))
+                            interface.printMsg(self, aux)
 
                 else:
                     print("Msg n é para mim")
             else:
                 for i in range(len(groups)):
-                    if msg[0] == groups[i]:
-                        aux = "{}: {} \n\n".format(str(msg[1]), str(msg[2]))
+                    if str(msg[0]) == groups[i]:
+                        aux = "Grupo {}- > {}: {} \n\n".format(
+                            str(msg[0]), str(msg[1]), str(msg[2]))
                         interface.printMsg(self, aux)
                         flag = 1
                     i += 1
                 if flag == 0:
-                    for i in range(len(msg[3])):
-                        if str(msg[3][i]) == username:
-                            print(
-                                "Adicionado em um novo grupo -> {}".format(str(msg[0])))
-                            groups.append(msg[0])
-                            aux = "Grupo {} -> {}: {}\n\n".format(
-                                str(msg[0]), str(msg[1]), str(msg[2]))
+                    x = []
+                    aux = ""
+                    # Recebemos do MQTT o vetor como string, é necessario repassar para vetor novamente
+                    for i in msg[3]:
+                        # Indicativos de string
+                        if i == '[' or i == "'" or i == " ":
+                            pass
+                        else:
+                            # Final do "vetor" e de um novo nome, então podemos adicionar ao novo vetor auxiliar
+                            if i == "," or i == "]":
+                                x.append(aux)
+                                aux = ""
+                            else:
+                                aux += i
+                                print(aux)
+                    print(x)
+                    for i in x:
+                        if i == username:
+                            groups.append(str(msg[0]))
+                            aux = "Adicionado em um novo grupo -> {} \n".format(str(msg[0]))
                             interface.printMsg(self, aux)
-                            break
+                            self.createButtonGroup(str(msg[0]))
+
                         else:
                             print("Nao estou no grupo")
-                        i += 1
 
     # Necessario alterar a logica para um melhor funcionamento no front end
 
@@ -380,6 +449,10 @@ class interface:
             interface.printMsg(self, aux)
             msg = "{}.{}.{}.0".format(self.dst, username, message)
             client.publish(topic, msg)  # Publica a mensagem no topico desejado
+            aux = str(time.strftime("Mensagem Recebida: " + '%B %d, %Y' + ' at ' + '%I:%M %p \n'))
+            interface.printMsg(self, aux)
+            aux = str(time.strftime("Mensagem Lida: " + '%B %d, %Y' + ' at ' + '%I:%M %p \n'))
+            interface.printMsg(self, aux)
 
         elif self.msgToSend == 1:
             grpName = self.dst  # Nome do grupo que está selecionado
@@ -397,19 +470,12 @@ class interface:
             if flag == 0:
                 # Caso o nome do grupo não exista, é necessario criar o novo grupo
                 groups.append(grpName)
-                #print("Para criar o grupo digite 'create' ")
-               # entry = input("Digite quem vc deseja add no grupo > \n")
-                #while entry != 'create':
-                    #entry = input("Digite quem vc deseja add no grupo > \n")
-                    # Add people in group
-                    #if entry != 'create':
-                        #grpUsers.append(entry)
                 message = self.msg
                 aux = "You: {} \n".format(message)
                 interface.printMsg(self, aux)
                 # Destino será o nome do grupo
-                msg = "{}.{}.{}.{} ".format(
-                    grpName, username, message, grpUsers)
+                msg = "{}.{}.{}.{}".format(
+                    grpName, username, message, self.listContacts)
                 client.publish("geral", str(msg))
 
 
