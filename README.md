@@ -114,7 +114,7 @@ Após iniciar todos os serviços necessário, precisamos apenas iniciar nosso cl
 - E veja  a mágica acontecer
 
 • Ficou com curiosidade do que se pode fazer com o nosso chat?
-<p> Veja no video uma demostração do sistema funcionando: LINK DO VIDEO </p>
+<p> Veja no video uma demostração do sistema funcionando: https://youtu.be/w7erw5CDB5s </p>
 
 # Contribuidores
 | Name | Git account |
