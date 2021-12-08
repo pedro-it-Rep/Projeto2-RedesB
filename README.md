@@ -85,7 +85,7 @@ Para inicializar com as configurações default, só rodar o comando:
 
 Para iniciar com alguma configuração personalizada, é necessario criar um arquivo mosquitto.conf.
 Voce pode ver mais sobre isso no site: https://mosquitto.org/man/mosquitto-conf-5.html
-Já tendo criado o arquivo, só rodar o comando
+ <p> Já tendo criado o arquivo, só rodar o comando </p>
 
     mosquitto -c mosquitto.conf
     
@@ -114,7 +114,7 @@ Após iniciar todos os serviços necessário, precisamos apenas iniciar nosso cl
 - E veja  a mágica acontecer
 
 • Ficou com curiosidade do que se pode fazer com o nosso chat?
-Veja no video uma demostração do sistema funcionando: LINK DO VIDEO
+<p> Veja no video uma demostração do sistema funcionando: LINK DO VIDEO </p>
 
 # Contribuidores
 | Name | Git account |
